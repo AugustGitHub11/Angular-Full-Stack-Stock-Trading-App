@@ -1,0 +1,270 @@
+<div *ngIf="!description" class="spinner">
+  <mat-spinner class="mt-5 mx-auto"></mat-spinner>
+</div>
+
+<div *ngIf="description" class="container" id="detailContainer">
+  <ngb-alert #selfClosingAlert *ngIf="addSuccess && addSuccessMsg" type="success" class="text-center" (closed)="addSuccessMsg=''">
+    {{ description.ticker | uppercase }} added to Watchlist.
+  </ngb-alert>
+  <ngb-alert #selfClosingAlert *ngIf="removeSuccess && removeSuccessMsg" type="danger" class="text-center" (closed)="removeSuccessMsg=''">
+    {{ description.ticker | uppercase }} removed from Watchlist.
+  </ngb-alert>
+  <ngb-alert #selfClosingAlert *ngIf="buySuccess && buySuccessMsg" type="success" class="text-center" (closed)="buySuccessMsg=''">
+    {{ description.ticker | uppercase }} bought successfully.
+  </ngb-alert>
+  <ngb-alert #selfClosingAlert *ngIf="sellSuccess && sellSuccessMsg" type="danger" class="text-center" (closed)="sellSuccessMsg=''">
+    {{ description.ticker | uppercase }} sold successfully.
+  </ngb-alert>
+
+  <div class="details">
+    <div class="row p-0 ml-0 mr-0">
+      <div class="col p-0 ml-0 mr-0">
+        <div class="ticker d-flex flex-row">
+          {{ description.ticker }}
+          <div class="d-inline-flex">
+          <svg *ngIf="!stared" (click)="addToWatchlist()" style="cursor: pointer"
+               xmlns="http://www.w3.org/2000/svg" width="23" height="23" fill="currentColor" class="bi bi-star mx-3 mt-3" viewBox="0 0 16 16">
+            <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/>
+          </svg>
+            <svg *ngIf="stared" (click)="removeFromWatchlist()" style="cursor: pointer"
+                 xmlns="http://www.w3.org/2000/svg" width="23" height="23" fill="gold" class="bi bi-star-fill mx-3 mt-3" viewBox="0 0 16 16">
+              <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="name d-flex flex-row">
+          {{ description.name }}
+        </div>
+        <div class="exchangeCode d-flex flex-row">
+          {{ description.exchange }}
+        </div>
+
+        <button id="buyBtn" class="btn btn-success btn-lg custom" (click)="open(buyModal)">
+          Buy
+        </button>
+
+        <button *ngIf="stockHeld" class="btn btn-danger btn-lg custom mt-2 ml-2" (click)="open2(sellModal)">
+          Sell
+        </button>
+        <ng-template #buyModal let-modal>
+          <div class="modal-header">
+            <div class="modal-title" id="buy-modal-title" style="font-size: 20px">
+              {{ tickerSymbol | uppercase }}
+            </div>
+            <button type="button" style="outline: none" class="close" data-dismiss="modal" aria-label="Close" (click)="modal.dismiss()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body mt-3 ml-2" style="font-size: 20px">
+            <div>Current Price: {{ latestPrice.c }}</div>
+            <div class="mt-1">Money in Wallet: ${{ this.walletMoney | number:'.2-2' }}</div>
+            <div class="mt-1">Quantity: <input [(ngModel)]="numShares" type="number" min="0" style="max-width: 100px"></div>
+          </div>
+          <div class="modal-footer mt-3" style="font-size: 20px">
+            <div class="mr-auto">Total: {{ numShares * latestPrice.c | number:'.2-2' }}</div>
+            <button class="btn btn-success btn-md"
+                    [disabled]="(numShares < 1) || !numShares || (numShares*latestPrice.c > walletMoney)"
+                    (click)="buyStock(); modal.dismiss()">
+              Buy
+            </button>
+          </div>
+        </ng-template>
+
+        <ng-template #sellModal let-modal>
+          <div class="modal-header">
+            <div class="modal-title" id="sell-modal-title" style="font-size: 20px">
+              {{ tickerSymbol | uppercase }}
+            </div>
+            <button type="button" style="outline: none" class="close" data-dismiss="modal" aria-label="Close" (click)="modal.dismiss()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body mt-3 ml-2" style="font-size: 20px">
+            <div>Current Price: {{ latestPrice.c }}</div>
+            <div class="mt-1">Money in Wallet: ${{ this.walletMoney | number:'.2-2' }}</div>
+            <div class="mt-1">Quantity: <input [(ngModel)]="numShares" type="number" min="0" style="max-width: 100px"></div>
+          </div>
+          <div class="modal-footer mt-3" style="font-size: 20px">
+            <div class="mr-auto">Total: {{ numShares * latestPrice.c | number:'.2-2' }}</div>
+            <button class="btn btn-success btn-md"
+                    [disabled]="(numShares < 1) || !numShares || (numShares*latestPrice.c > walletMoney)"
+                    (click)="sellStock(); modal.dismiss()">
+              Sell
+            </button>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="col p-0 ml-0 mr-0">
+        <img src="{{ description.logo }}" class="mx-auto d-block" id="logo">
+      </div>
+
+      <div class="col p-0 ml-0 mr-0" [class.text-success]="latestPrice.d > 0" [class.text-danger]="latestPrice.d < 0">
+        <div class="lastPrice d-flex flex-row-reverse">
+          {{ latestPrice.c | number:'.2-2' }}
+        </div>
+        <div class="change">
+          <svg *ngIf="latestPrice.d > 0" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="green" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
+            <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+          </svg>
+          <svg *ngIf="latestPrice.d < 0" xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="red" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
+            <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+          </svg>
+          {{ latestPrice.d | number:'.2-2' }}
+          ({{ latestPrice.dp | number:'.2-2' }}%)
+          <div class="currentTime">
+            {{ currentTime | date: "yyyy-MM-dd H:mm:ss" }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div *ngIf="isMarketOpen" class="market mx-auto" style="color: green">
+        Market is Open
+      </div>
+      <div *ngIf="!isMarketOpen" class="market mx-auto" style="color: red">
+        Market Closed On {{ latestPrice.t * 1000 | date: "yyyy-MM-dd H:mm:ss" }}
+      </div>
+    </div>
+  </div>
+
+  <mat-tab-group mat-stretch-tabs class="tabs">
+    <mat-tab label="Summary">
+      <div class="container" id="summaryContainer">
+        <div class="row">
+          <div class="col-sm">
+            <div class="row ml-5">
+              <div class="col col-auto ml-5 p-0">
+                  <table class="table table-borderless table-sm" style="font-size: 20px">
+                    <tbody>
+                      <tr>
+                        <th>High Price:</th>
+                        <td>{{ latestPrice.h | number:'.2-2' }}</td>
+                      </tr>
+                      <tr>
+                        <th>Low Price:</th>
+                        <td>{{ latestPrice.l | number:'.2-2' }}</td>
+                      </tr>
+                      <tr>
+                        <th>Open Price:</th>
+                        <td>{{ latestPrice.o | number:'.2-2' }}</td>
+                      </tr>
+                      <tr>
+                        <th>Prev. Price:</th>
+                        <td>{{ latestPrice.pc | number:'.2-2' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+              </div>
+            </div>
+
+            <div class="row mt-5">
+              <b class="aboutCompany mx-auto">About the company</b>
+            </div>
+
+            <div class="row mt-3 ml-3">
+              <div class="companyInfo">
+                <div class="row"><b>IPO Start Date:&nbsp;</b><p>{{ description.ipo }}</p></div>
+                <div class="row mt-3"><b>Industry:&nbsp;</b><p>{{ description.finnhubIndustry }}</p></div>
+                <div class="row mt-3"><b>Webpage:&nbsp;</b><a href="{{ description.weburl }}">{{ description.weburl }}</a></div>
+                <div class="row mt-4"><b>Company peers:</b></div>
+                <div class="row mt-4">
+                  <div *ngFor="let peer of peers" class="d-inline">
+                    <a href="/search/{{ peer }}">{{ peer }},&nbsp;</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm">
+            <highcharts-chart [Highcharts]="Highcharts" [constructorType]="chartConstructor"
+                              [options]="hourlyChartOptions" style="width: 100%; height: 500px;
+                              display: block">
+            </highcharts-chart>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Top News">
+      <div class="container mt-4" style="max-width: 100%" id="newsContainer">
+        <div class="row" *ngIf="filteredNews">
+          <div class="card col-lg-5 m-4 mx-auto" style="min-width: 47%; max-height: 600px" *ngFor="let news of filteredNews">
+            <div class="card-body row" style="cursor: pointer" (click)="checkNews(news)">
+              <div class="col-lg-3 p-0 my-auto">
+                <img class="card-img my-auto" src="{{ news.image }}">
+              </div>
+              <div class="col">
+                <p class="card-title">{{ news.headline }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Charts">
+      <ng-template matTabContent>
+      <div class="container" style="max-width: 100%">
+        <highcharts-chart class="col-sm" [Highcharts]="Highcharts" [constructorType]="chartConstructor"
+        [options]="historicalChartOptions" style="height: 1000px; display: block">
+        </highcharts-chart>
+      </div>
+      </ng-template>
+    </mat-tab>
+
+    <mat-tab label="Insights">
+      <ng-template matTabContent>
+        <div class="container" style="max-width: 100%">
+          <div class="row mt-5">
+            <div class="col-sm" style="font-size: 35px; text-align: center">
+              Social Sentiments
+              <table class="table mt-4 mx-auto" style="max-width: 40%; font-size: 20px">
+                <thead>
+                  <tr style="background-color: lightgray; line-height: 30px">
+                    <th scope="col">{{ description.name }}</th>
+                    <th scope="col">Reddit</th>
+                    <th scope="col">Twitter</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row" style="background-color: lightgray; line-height: 30px">Total Mentions</th>
+                    <td style="background-color: white;">{{ socialSentiment.redditM }}</td>
+                    <td style="background-color: white;">{{ socialSentiment.twitterM }}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" style="background-color: lightgray; line-height: 30px">Positive Mentions</th>
+                    <td style="background-color: white;">{{ socialSentiment.redditPM }}</td>
+                    <td style="background-color: white;">{{ socialSentiment.twitterPM }}</td>
+                  </tr>
+                  <tr>
+                    <th scope="row" style="background-color: lightgray; line-height: 30px">Negative Mentions</th>
+                    <td style="background-color: white;">{{ socialSentiment.redditNM }}</td>
+                    <td style="background-color: white;">{{ socialSentiment.twitterNM }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="row mt-5">
+            <div class="col-sm">
+              <highcharts-chart [Highcharts]="HC" [constructorType]="HCConstructor"
+                                [options]="recommendationChartsOptions" style="height: 500px; display: block">
+              </highcharts-chart>
+            </div>
+
+            <div class="col-sm">
+              <highcharts-chart [Highcharts]="HC" [constructorType]="HCConstructor"
+              [options]="earningsChartsOptions" style="height: 500px; display: block">
+              </highcharts-chart>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+</div>

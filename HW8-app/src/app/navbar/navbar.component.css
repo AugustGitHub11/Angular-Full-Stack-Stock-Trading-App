@@ -1,0 +1,13 @@
+nav {
+  background-color: darkblue;
+}
+
+.nav-item {
+  text-align: right;
+}
+
+.active {
+  border: 2px solid white;
+  border-radius: 10px;
+}
+

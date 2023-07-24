@@ -1,0 +1,33 @@
+<div class="container mt-5" style="max-width: 80%">
+  <div style="font-size: 40px">My Watchlist</div>
+
+  <ngb-alert *ngIf="noStock" class="mt-5 text-center" [dismissible]="false">
+  Currently you don't have any stock in your watchlist.
+  </ngb-alert>
+
+  <div *ngIf="!noStock" class="container mt-5 m-0 p-0" style="max-width: 100%">
+    <ngb-alert type="alert.type" class="card border" *ngFor="let ticker of myWatchlist" (closed)="removeTicker(ticker['tickerSymbol'])" style="border: 3px solid black">
+      <div class="row mt-4 mb-4" (click)="goToTicker(ticker['tickerSymbol'])" style="cursor: pointer">
+        <div class="col ml-4">
+          <div class="d-flex flex-row" style="font-size: 30px">{{ ticker['tickerSymbol'] }}</div>
+          <div class="d-flex flex-row mt-4" style="font-size: 20px">{{ ticker['tickerName']}}</div>
+        </div>
+        <div class="col mr-4" [class.text-success]="ticker['priceChange'] > 0" [class.text-danger]="ticker['priceChange'] < 0">
+          <div class="d-flex flex-row-reverse" style="font-size: 30px">{{ ticker['tickerPrice'] }}</div>
+          <div class="d-flex flex-row-reverse mt-4" style="font-size: 20px">
+            <div>
+            <svg *ngIf="ticker['priceChange'] > 0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="green" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
+              <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+            </svg>
+            <svg *ngIf="ticker['priceChange'] < 0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="red" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
+              <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+            </svg>
+            {{ ticker['priceChange'] }}
+            ({{ ticker['priceChangePercent'] }}%)
+            </div>
+          </div>
+        </div>
+      </div>
+    </ngb-alert>
+  </div>
+</div>

@@ -1,0 +1,128 @@
+<div class="container mt-5" style="max-width: 80%">
+  <ngb-alert #selfClosingAlert *ngIf="buySuccess && buySuccessMsg" type="success" class="text-center mt-5" (closed)="buySuccessMsg=''">
+    {{ this.transaction }} bought successfully.
+  </ngb-alert>
+  <ngb-alert #selfClosingAlert *ngIf="sellSuccess && sellSuccessMsg" type="danger" class="text-center mt-5" (closed)="sellSuccessMsg=''">
+    {{ this.transaction }} sold successfully.
+  </ngb-alert>
+
+  <div style="font-size: 40px">My Portfolio</div>
+  <div class="mt-5" style="font-size: 30px">Money in Wallet: ${{ myWallet['wallet'] }}</div>
+
+  <ngb-alert *ngIf="noStock" class="mt-5 text-center" [dismissible]="false">
+    Currently you don't have any stock.
+  </ngb-alert>
+
+  <div class="container mt-5 m-0 p-0" style="max-width: 100%">
+    <div class="card mt-4" *ngFor="let purchase of myPortfolio">
+      <div class="card-header">
+        <div class="row mt-3 mb-3">
+          <div class="ml-3" style="font-size: 30px">{{ purchase['tickerSymbol'] | uppercase }}</div>
+          <div class="ml-2 mt-2" style="font-size: 23px; color: gray">{{ purchase['tickerName'] }}</div>
+        </div>
+      </div>
+
+      <div class="card-body" style="font-size: 23px">
+        <div class="card-text row">
+          <div class="col-sm">
+            <div class="row">
+              <div class="col">Quantity: </div>
+              <div class="col text-right">{{ purchase['quantity'] | number:'.2-2' }}</div>
+            </div>
+            <div class="row mt-3">
+              <div class="col">Avg.Cost / Share: </div>
+              <div class="col text-right">{{ purchase['totalCost'] / purchase['quantity'] | number:'.2-2' }}</div>
+            </div>
+            <div class="row mt-3">
+              <div class="col">Total Cost: </div>
+              <div class="col text-right">{{ purchase['totalCost'] | number:'.2-2' }}</div>
+            </div>
+          </div>
+
+          <div class="col-sm">
+            <div class="row">
+              <div class="col">Change: </div>
+              <div class="col text-right" [class.text-success]="purchase['change'] > 0" [class.text-danger]="purchase['change'] < 0">
+                <svg *ngIf="purchase['change'] > 0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="green" class="bi bi-caret-up-fill" viewBox="0 0 16 16">
+                  <path d="m7.247 4.86-4.796 5.481c-.566.647-.106 1.659.753 1.659h9.592a1 1 0 0 0 .753-1.659l-4.796-5.48a1 1 0 0 0-1.506 0z"/>
+                </svg>
+                <svg *ngIf="purchase['change'] < 0" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="red" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
+                  <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+                </svg>
+                {{ purchase['change'] | number:'.2-2' }}
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col">Current Price: </div>
+              <div class="col text-right" [class.text-success]="purchase['change'] > 0" [class.text-danger]="purchase['change'] < 0">
+                {{ (purchase['totalCost'] / purchase['quantity']) * (1 + purchase['change'] / 100) | number:'.2-2' }}
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col">Market Value: </div>
+              <div class="col text-right" [class.text-success]="purchase['change'] > 0" [class.text-danger]="purchase['change'] < 0">
+                {{ purchase['totalCost'] * (1 + purchase['change'] / 100) | number:'.2-2' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer d-flex justify-content-end">
+        <button class="btn btn-primary btn-md custom" (click)="open(buyModal)">
+          Buy
+        </button>
+        <ng-template #buyModal let-modal>
+          <div class="modal-header">
+            <div class="modal-title" id="buy-modal-title" style="font-size: 20px">
+              {{ purchase['tickerSymbol'] | uppercase }}
+            </div>
+            <button type="button" style="outline: none" class="close" data-dismiss="modal" aria-label="Close" (click)="modal.dismiss()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body mt-3 ml-2" style="font-size: 20px">
+            <div>Current Price: {{ (purchase['totalCost'] / purchase['quantity']) * (1 + purchase['change'] / 100) }}</div>
+            <div class="mt-1">Money in Wallet: ${{ myWallet['wallet'] | number:'.2-2' }}</div>
+            <div class="mt-1">Quantity: <input [(ngModel)]="numShares" type="number" min="0" style="max-width: 100px"></div>
+          </div>
+          <div class="modal-footer mt-3" style="font-size: 20px">
+            <div class="mr-auto">Total: {{ numShares * (purchase['totalCost'] / purchase['quantity']) * (1 + purchase['change'] / 100) | number:'.2-2' }}</div>
+            <button class="btn btn-success btn-md"
+                    [disabled]="(numShares < 1) || !numShares || (numShares*(purchase['totalCost'] / purchase['quantity']) * (1 + purchase['change'] / 100) > myWallet['wallet'])"
+                    (click)="buyStock(purchase); modal.dismiss()">
+              Buy
+            </button>
+          </div>
+        </ng-template>
+        <button class="btn btn-primary bg-danger btn-md custom ml-2" (click)="open2(sellModal)">
+          Sell
+        </button>
+        <ng-template #sellModal let-modal>
+          <div class="modal-header">
+            <div class="modal-title" id="sell-modal-title" style="font-size: 20px">
+              {{ purchase['tickerSymbol'] | uppercase }}
+            </div>
+            <button type="button" style="outline: none" class="close" data-dismiss="modal" aria-label="Close" (click)="modal.dismiss()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body mt-3 ml-2" style="font-size: 20px">
+            <div>Current Price: {{ (purchase['totalCost'] / purchase['quantity']) * (1 + purchase['change'] / 100) }}</div>
+            <div class="mt-1">Money in Wallet: ${{ myWallet['wallet'] | number:'.2-2' }}</div>
+            <div class="mt-1">Quantity: <input [(ngModel)]="numShares" type="number" min="0" style="max-width: 100px"></div>
+          </div>
+          <div class="modal-footer mt-3" style="font-size: 20px">
+            <div class="mr-auto">Total: {{ numShares * (purchase['totalCost'] / purchase['quantity']) * (1 + purchase['change'] / 100) | number:'.2-2' }}</div>
+            <button class="btn btn-success btn-md"
+                    [disabled]="(numShares < 1) || !numShares || (numShares*(purchase['totalCost'] / purchase['quantity']) * (1 + purchase['change'] / 100) > myWallet['wallet'])"
+                    (click)="sellStock(purchase); modal.dismiss()">
+              Sell
+            </button>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>
+
